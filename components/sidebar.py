@@ -320,3 +320,30 @@ layout = dbc.Col([
         dbc.NavLink("🚪 Sair", href="/logout", active="exact", className="nav-link-custom")
     ], vertical=True, pills=True, id='nav_buttons')
 ], id='sidebar_completa')
+
+# ========= CALLBACKS ========= #
+
+# CALLBACK: Controle dos Modais
+@app.callback(
+    Output('modal-novo-receita', 'is_open'),
+    [Input('open-novo-receita', 'n_clicks'),
+     Input('salvar_receita', 'n_clicks')],
+    State('modal-novo-receita', 'is_open')
+)
+def toggle_receita_modal(open_clicks, save_clicks, is_open):
+    """Abre/fecha o modal de receita."""
+    if open_clicks or save_clicks:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output('modal-novo-despesa', 'is_open'),
+    [Input('open-novo-despesa', 'n_clicks'),
+     Input('salvar_despesa', 'n_clicks')],
+    State('modal-novo-despesa', 'is_open')
+)
+def toggle_despesa_modal(open_clicks, save_clicks, is_open):
+    """Abre/fecha o modal de despesa."""
+    if open_clicks or save_clicks:
+        return not is_open
+    return is_open
