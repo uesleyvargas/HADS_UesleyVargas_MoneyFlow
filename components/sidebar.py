@@ -347,3 +347,72 @@ def toggle_despesa_modal(open_clicks, save_clicks, is_open):
     if open_clicks or save_clicks:
         return not is_open
     return is_open
+
+# CALLBACK 3: Salvar Transações
+@app.callback(
+    Output('store-receitas', 'data'),
+    Input('salvar_receita', 'n_clicks'),
+    [State("txt-receita", "value"),
+     State("valor-receita", "value"),
+     State("date-receitas", "date"),
+     State("switches-input-receita", "value"),
+     State("select_receita", "value"),
+     State("store-user-session", "data")],
+    prevent_initial_call=True
+)
+def save_receita(n_clicks, descricao, valor, data_str, switches, categoria, session_data):
+    """Salva uma nova receita no banco de dados."""
+    if not n_clicks or not valor:
+        return dash.no_update
+    
+    try:
+        # Prepara os dados
+        data = pd.to_datetime(data_str).date() if data_str else datetime.today().date()
+        efetuado = 1 if switches and 1 in switches else 0
+        fixo = 1 if switches and 2 in switches else 0
+        usuario_id = session_data.get('user_id') if session_data else None
+        
+        # Salva no banco
+        salvar_transacao('receita', descricao, float(valor), data, categoria, efetuado, fixo, usuario_id)
+        
+        # Recarrega os dados
+        df_receitas, _ = ler_transacoes(usuario_id)
+        return df_receitas.to_dict('records') if not df_receitas.empty else []
+        
+    except Exception as e:
+        print(f"❌ Erro ao salvar receita: {e}")
+        return dash.no_update
+
+@app.callback(
+    Output('store-despesas', 'data'),
+    Input('salvar_despesa', 'n_clicks'),
+    [State("txt-despesa", "value"),
+     State("valor-despesa", "value"),
+     State("date-despesas", "date"),
+     State("switches-input-despesa", "value"),
+     State("select_despesa", "value"),
+     State("store-user-session", "data")],
+    prevent_initial_call=True
+)
+def save_despesa(n_clicks, descricao, valor, data_str, switches, categoria, session_data):
+    """Salva uma nova despesa no banco de dados."""
+    if not n_clicks or not valor:
+        return dash.no_update
+    
+    try:
+        # Prepara os dados
+        data = pd.to_datetime(data_str).date() if data_str else datetime.today().date()
+        efetuado = 1 if switches and 1 in switches else 0
+        fixo = 1 if switches and 2 in switches else 0
+        usuario_id = session_data.get('user_id') if session_data else None
+        
+        # Salva no banco
+        salvar_transacao('despesa', descricao, float(valor), data, categoria, efetuado, fixo, usuario_id)
+        
+        # Recarrega os dados
+        _, df_despesas = ler_transacoes(usuario_id)
+        return df_despesas.to_dict('records') if not df_despesas.empty else []
+        
+    except Exception as e:
+        print(f"❌ Erro ao salvar despesa: {e}")
+        return dash.no_update
