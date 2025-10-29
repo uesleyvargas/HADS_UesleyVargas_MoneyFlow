@@ -214,7 +214,7 @@ def create_category_management_section(tipo):
 # ========= LAYOUT PRINCIPAL ========= #
 layout = dbc.Col([
     # Cabeçalho
-    html.H1("MyFinance", className="text-primary"),
+    html.H1("MoneyFlow", className="text-primary"),
     html.P("By Uesley", className="text-info"),
     html.Hr(),
     
@@ -348,7 +348,7 @@ def toggle_despesa_modal(open_clicks, save_clicks, is_open):
         return not is_open
     return is_open
 
-# CALLBACK 3: Salvar Transações
+# CALLBACK : Salvar Transações
 @app.callback(
     Output('store-receitas', 'data'),
     Input('salvar_receita', 'n_clicks'),
@@ -416,3 +416,66 @@ def save_despesa(n_clicks, descricao, valor, data_str, switches, categoria, sess
     except Exception as e:
         print(f"❌ Erro ao salvar despesa: {e}")
         return dash.no_update
+    
+# CALLBACK: Gerenciamento de Categorias
+@app.callback(
+    [Output("select_receita", "options"),
+     Output('checklist-selected-style-receita', 'options')],
+    [Input("add-category-receita", "n_clicks"),
+     Input("remove-category-receita", 'n_clicks')],
+    [State("input-add-receita", "value"),
+     State('checklist-selected-style-receita', 'value')],
+    prevent_initial_call=True
+)
+def manage_receita_categories(add_clicks, remove_clicks, nova_categoria, categorias_remover):
+    """Gerencia categorias de receita (adicionar/remover)."""
+    return manage_categories('receita', add_clicks, remove_clicks, nova_categoria, categorias_remover)
+
+@app.callback(
+    [Output("select_despesa", "options"),
+     Output('checklist-selected-style-despesa', 'options')],
+    [Input("add-category-despesa", "n_clicks"),
+     Input("remove-category-despesa", 'n_clicks')],
+    [State("input-add-despesa", "value"),
+     State('checklist-selected-style-despesa', 'value')],
+    prevent_initial_call=True
+)
+def manage_despesa_categories(add_clicks, remove_clicks, nova_categoria, categorias_remover):
+    """Gerencia categorias de despesa (adicionar/remover)."""
+    return manage_categories('despesa', add_clicks, remove_clicks, nova_categoria, categorias_remover)
+
+def manage_categories(tipo, add_clicks, remove_clicks, nova_categoria, categorias_remover):
+    """Função genérica para gerenciar categorias."""
+    # Adicionar nova categoria
+    if add_clicks and nova_categoria:
+        conn = conectar_bd()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("INSERT OR IGNORE INTO categorias (nome, tipo) VALUES (?, ?)", 
+                          (nova_categoria.strip(), tipo))
+            conn.commit()
+        except Exception as e:
+            print(f"❌ Erro ao adicionar categoria: {e}")
+        finally:
+            conn.close()
+    
+    # Remover categorias selecionadas
+    if remove_clicks and categorias_remover:
+        conn = conectar_bd()
+        cursor = conn.cursor()
+        try:
+            placeholders = ', '.join('?' for _ in categorias_remover)
+            cursor.execute(f"DELETE FROM categorias WHERE nome IN ({placeholders}) AND tipo = ?", 
+                          categorias_remover + [tipo])
+            conn.commit()
+        except Exception as e:
+            print(f"❌ Erro ao remover categorias: {e}")
+        finally:
+            conn.close()
+    
+    # Atualiza a lista de categorias
+    categorias_receita, categorias_despesa = ler_categorias()
+    categorias = categorias_receita if tipo == 'receita' else categorias_despesa
+    options = [{'label': cat, 'value': cat} for cat in categorias]
+    
+    return options, options
