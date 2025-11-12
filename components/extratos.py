@@ -70,7 +70,7 @@ def imprimir_tabela(data):
 
     return tabela
 
-# Bar Graph            
+            
 @app.callback(
     Output('bar-graph', 'figure'),
     [Input('store-despesas', 'data'),]

@@ -140,3 +140,44 @@ def update_saldo_total(receitas_data, despesas_data):
     total_despesas = pd.DataFrame(despesas_data)['Valor'].sum() if despesas_data else 0
     saldo = total_receitas - total_despesas
     return f"R$ {saldo:.2f}"
+
+# Gráfico 1: Fluxo de Caixa
+@app.callback(
+    Output('graph1', 'figure'),
+    [input('store-receitas', 'data'), input('store-despesas', 'data'),
+     input("dropdown-receitas", "value"), input("dropdown-despesas", "value")]
+)
+def update_graph1(data_receita, data_despesa, receita_selecionada, despesa_selecionada):
+
+    # Garante que os seletores não sejam None para o filtro
+    receita_selecionada = receita_selecionada or []
+    despesa_selecionada = despesa_selecionada or []
+
+    # Cria DataFrames vazios com colunas se não houver dados
+    df_receitas = pd.DataFrame(data_receita) if data_receita else pd.DataFrame({'Categoria': [], 'Data': [], 'Valor': []})
+    df_despesas = pd.DataFrame(data_despesa) if data_despesa else pd.DataFrame({'Categoria': [], 'Data': [], 'Valor': []})
+
+    # Filtra pelos valores selecionados nos dropdowns
+    df_receitas = df_receitas[df_receitas['Categoria'].isin(receita_selecionada)]
+    df_despesas = df_despesas[df_despesas['Categoria'].isin(despesa_selecionada)] 
+
+    #Agrupa os Dados
+    df_rc = df_receitas.set_index("Data")[["Valor"]].groupby("Data").sum().rename(columns={"Valor": "Receita"}) if not df_receitas.empty else pd.DataFrame()
+    df_ds = df_despesas.set_index("Data")[["Valor"]].groupby("Data").sum().rename(columns={"Valor": "Despesa"}) if not df_despesas.empty else pd.DataFrame()
+
+    # Junta os dois dataFrames
+    df_acum = df_rc.join(df_ds, how="outer").fillna(0)
+
+    # Garante que ambas as colunas 'Receita' e 'Despesa' existam após o join
+    if 'Receita' not in df_acum:
+        df_acum['Receita'] = 0
+    if 'Despesa' not in df_acum:
+        df_acum['Despesa'] = 0
+    
+    
+    df_acum["Acum"] = (df_acum["Receita"] - df_acum["Despesa"]).cumsum()
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(name="Fluxo de caixa", x=df_acum.index, y=df_acum["Acum"], mode="lines"))
+    fig.update_layout(margin=graph_margin, height=250, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    return fig
