@@ -174,10 +174,68 @@ def update_graph1(data_receita, data_despesa, receita_selecionada, despesa_selec
     if 'Despesa' not in df_acum:
         df_acum['Despesa'] = 0
     
-    
+
     df_acum["Acum"] = (df_acum["Receita"] - df_acum["Despesa"]).cumsum()
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(name="Fluxo de caixa", x=df_acum.index, y=df_acum["Acum"], mode="lines"))
     fig.update_layout(margin=graph_margin, height=250, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    return fig
+
+# Gráfico 2 - Comparativo Receitas x Despesas
+@app.callback(
+    Output('graph2', 'figure'),
+    [Input('store-receitas', 'data'), Input('store-despesas', 'data'),
+     Input('dropdown-receita', 'value'), Input('dropdown-despesa', 'value'),
+     Input('date-picker-config', 'start_date'), Input('date-picker-config', 'end_date')]
+)
+def update_graph2(data_receita, data_despesa, receita_selecionada, despesa_selecionada, start_date, end_date):
+    fig = go.Figure()
+    
+    if not data_receita and not data_despesa:
+        fig.update_layout(title="Nenhum dado para exibir", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        return fig
+
+    df_rc = pd.DataFrame(data_receita) if data_receita else pd.DataFrame()
+    df_ds = pd.DataFrame(data_despesa) if data_despesa else pd.DataFrame()
+
+    if not df_rc.empty: df_rc["Output"] = "Receitas"
+    if not df_ds.empty: df_ds["Output"] = "Despesas"
+    
+    df_final = pd.concat([df for df in [df_rc, df_ds] if not df.empty])
+    
+    if df_final.empty or not start_date or not end_date:
+        fig.update_layout(title="Selecione filtros para exibir dados", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        return fig
+
+    df_final["Data"] = pd.to_datetime(df_final["Data"])
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+
+    df_final = df_final[(df_final["Data"] >= start_date) & (df_final["Data"] <= end_date)]
+    
+    categorias_selecionadas = (receita_selecionada or []) + (despesa_selecionada or [])
+    df_final = df_final[df_final["Categoria"].isin(categorias_selecionadas)]
+
+    fig = px.bar(df_final, x="Data", y="Valor", color="Output", barmode="group")
+    fig.update_layout(margin=graph_margin, height=350, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    return fig
+
+# Gráfico 3 - Pizza de Receitas
+@app.callback(
+    Output('graph3', "figure"),
+    [Input('store-receitas', 'data'), Input('dropdown-receita', 'value')]
+)
+def update_pie_receita(data_receita, receita_selecionada):
+    if not data_receita or not receita_selecionada:
+        return go.Figure(layout={'title': 'Receitas', 'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'})
+
+    df = pd.DataFrame(data_receita)
+    df = df[df['Categoria'].isin(receita_selecionada)]
+
+    if df.empty:
+        return go.Figure(layout={'title': 'Receitas', 'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'})
+
+    fig = px.pie(df, values='Valor', names='Categoria', hole=.2, title="Receitas")
+    fig.update_layout(margin=graph_margin, height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     return fig
