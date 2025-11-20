@@ -141,15 +141,14 @@ def update_saldo_total(receitas_data, despesas_data):
     saldo = total_receitas - total_despesas
     return f"R$ {saldo:.2f}"
 
-# Gráfico 1: Fluxo de Caixa
+# Gráfico 1 - Fluxo de Caixa
 @app.callback(
     Output('graph1', 'figure'),
-    [input('store-receitas', 'data'), input('store-despesas', 'data'),
-     input("dropdown-receitas", "value"), input("dropdown-despesas", "value")]
+    [Input('store-receitas', 'data'), Input('store-despesas', 'data'),
+     Input("dropdown-receita", "value"), Input("dropdown-despesa", "value")]
 )
 def update_graph1(data_receita, data_despesa, receita_selecionada, despesa_selecionada):
-
-    # Garante que os seletores não sejam None para o filtro
+    # Garante que os seletores não sejam None para o filtro .isin()
     receita_selecionada = receita_selecionada or []
     despesa_selecionada = despesa_selecionada or []
 
@@ -159,13 +158,13 @@ def update_graph1(data_receita, data_despesa, receita_selecionada, despesa_selec
 
     # Filtra pelos valores selecionados nos dropdowns
     df_receitas = df_receitas[df_receitas['Categoria'].isin(receita_selecionada)]
-    df_despesas = df_despesas[df_despesas['Categoria'].isin(despesa_selecionada)] 
+    df_despesas = df_despesas[df_despesas['Categoria'].isin(despesa_selecionada)]
 
-    #Agrupa os Dados
+    # Agrupa os dados
     df_rc = df_receitas.set_index("Data")[["Valor"]].groupby("Data").sum().rename(columns={"Valor": "Receita"}) if not df_receitas.empty else pd.DataFrame()
     df_ds = df_despesas.set_index("Data")[["Valor"]].groupby("Data").sum().rename(columns={"Valor": "Despesa"}) if not df_despesas.empty else pd.DataFrame()
 
-    # Junta os dois dataFrames
+    # Junta os dois dataframes
     df_acum = df_rc.join(df_ds, how="outer").fillna(0)
 
     # Garante que ambas as colunas 'Receita' e 'Despesa' existam após o join
@@ -173,7 +172,6 @@ def update_graph1(data_receita, data_despesa, receita_selecionada, despesa_selec
         df_acum['Receita'] = 0
     if 'Despesa' not in df_acum:
         df_acum['Despesa'] = 0
-    
 
     df_acum["Acum"] = (df_acum["Receita"] - df_acum["Despesa"]).cumsum()
 
@@ -237,5 +235,24 @@ def update_pie_receita(data_receita, receita_selecionada):
         return go.Figure(layout={'title': 'Receitas', 'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'})
 
     fig = px.pie(df, values='Valor', names='Categoria', hole=.2, title="Receitas")
+    fig.update_layout(margin=graph_margin, height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    return fig
+
+# Gráfico 4 - Pizza de Despesas
+@app.callback(
+    Output('graph4', "figure"),
+    [Input('store-despesas', 'data'), Input('dropdown-despesa', 'value')]
+)
+def update_pie_despesa(data_despesa, despesa_selecionada):
+    if not data_despesa or not despesa_selecionada:
+        return go.Figure(layout={'title': 'Despesas', 'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'})
+
+    df = pd.DataFrame(data_despesa)
+    df = df[df['Categoria'].isin(despesa_selecionada)]
+
+    if df.empty:
+        return go.Figure(layout={'title': 'Despesas', 'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'})
+
+    fig = px.pie(df, values='Valor', names='Categoria', hole=.2, title="Despesas")
     fig.update_layout(margin=graph_margin, height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     return fig
