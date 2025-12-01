@@ -121,7 +121,7 @@ def ler_transacoes(usuario_id=None):
     """Lê transações do banco de dados filtrando por usuário."""
     conn = conectar_bd()
     
-    # Query base para transações - AGORA FILTRA APENAS POR USUÁRIO ESPECÍFICO
+    # Query base para transações
     if usuario_id:
         query_receitas = """
         SELECT valor as Valor, efetuado as Efetuado, fixo as Fixo, 
@@ -147,7 +147,7 @@ def ler_transacoes(usuario_id=None):
     return df_receitas, df_despesas
 
 def ler_categorias():
-    """Lê categorias do banco de dados (são globais, não por usuário)."""
+    """Lê categorias do banco de dados."""
     conn = conectar_bd()
     df_cat = pd.read_sql_query("SELECT nome, tipo FROM categorias", conn)
     conn.close()
@@ -198,7 +198,7 @@ def criar_usuario(username, email, password):
         
         conn.commit()
         conn.close()
-        return True, f"Usuário criado com sucesso. ID: {user_id}"
+        return True, f"Usuário criado com sucesso: Seja bem vindo(a) ao MoneyFlow {username}"
         
     except sqlite3.Error as e:
         return False, f"Erro de banco de dados: {str(e)}"

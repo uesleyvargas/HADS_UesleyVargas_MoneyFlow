@@ -1,4 +1,3 @@
-/* assets/style.css */
 /* ========= ESTILOS GERAIS DA SIDEBAR ========= */
 #sidebar_completa {
     height: 100vh;
@@ -24,93 +23,6 @@
     justify-content: center;
     margin-bottom: 20px;
     border: 0px transparent solid;
-}
-
-/* ========= ESTILOS DO AVATAR E UPLOAD ========= */
-.avatar-container {
-    text-align: center;
-    margin-bottom: 25px;
-    padding: 15px;
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.avatar-wrapper {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    margin: 0 auto 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.avatar-wrapper:hover {
-    transform: scale(1.05);
-}
-
-.perfil_avatar {
-    width: 100% !important;
-    height: 100% !important;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid #007bff;
-    transition: all 0.3s ease;
-    background: linear-gradient(45deg, #007bff, #0056b3);
-}
-
-.avatar-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 123, 255, 0.8);
-    border-radius: 50%;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.avatar-wrapper:hover .avatar-overlay {
-    display: flex;
-    animation: fadeIn 0.3s ease-in;
-}
-
-.avatar-overlay .fa-camera {
-    color: white;
-    font-size: 24px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-.avatar-click-text {
-    font-size: 12px;
-    color: #6c757d;
-    margin: 8px 0 0 0;
-    text-align: center;
-    font-weight: 500;
-}
-
-/* ========= ESTILOS DO UPLOAD ========= */
-.dcc-upload {
-    width: 100px !important;
-    height: 100px !important;
-    margin: 0 auto !important;
-    border: none !important;
-    background: transparent !important;
-    cursor: pointer !important;
-    border-radius: 50% !important;
-}
-
-.dcc-upload:hover {
-    background: transparent !important;
-}
-
-.dcc-upload.dragover .avatar-overlay {
-    display: flex;
-    background: rgba(40, 167, 69, 0.8);
 }
 
 /* ========= BOTÕES DE AÇÃO ========= */
@@ -226,16 +138,6 @@
         height: auto;
     }
     
-    .avatar-wrapper {
-        width: 80px;
-        height: 80px;
-    }
-    
-    .dcc-upload {
-        width: 80px !important;
-        height: 80px !important;
-    }
-    
     .action-button {
         padding: 8px;
         font-size: 14px;
@@ -247,23 +149,6 @@
         padding: 10px;
     }
     
-    .avatar-wrapper {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .dcc-upload {
-        width: 60px !important;
-        height: 60px !important;
-    }
-    
-    .avatar-overlay .fa-camera {
-        font-size: 18px;
-    }
-    
-    .avatar-click-text {
-        font-size: 11px;
-    }
 }
 
 /* ========= ESTADOS ESPECIAIS ========= */

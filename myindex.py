@@ -13,6 +13,7 @@ from components import sidebar, dashboards, extratos, login
 from db import ler_transacoes, ler_categorias, buscar_usuario_por_id
 import pandas as pd
 
+
 # --- Layout Principal ---
 content = html.Div(id="page-content")
 
@@ -44,12 +45,6 @@ def display_page(pathname, session_data):
     """
     Controla qual página é exibida baseado na rota e status de login.
     
-    Args:
-        pathname (str): Caminho da URL atual
-        session_data (dict): Dados da sessão do usuário
-        
-    Returns:
-        html.Div: Layout da página a ser exibida
     """
     # Verifica se o usuário está logado
     if not session_data or not session_data.get('logged_in'):
@@ -75,12 +70,6 @@ def render_page_content(pathname, session_data):
     """
     Renderiza o conteúdo específico da página baseado na rota.
     
-    Args:
-        pathname (str): Caminho da URL atual
-        session_data (dict): Dados da sessão do usuário
-        
-    Returns:
-        html.Div: Conteúdo da página específica
     """
     # Se não estiver logado, não renderiza conteúdo
     if not session_data or not session_data.get('logged_in'):
@@ -114,11 +103,6 @@ def load_user_data(session_data):
     """
     Carrega os dados financeiros do usuário quando ele faz login.
     
-    Args:
-        session_data (dict): Dados da sessão do usuário
-        
-    Returns:
-        tuple: (receitas, despesas, cat_receitas, cat_despesas) - Dados financeiros do usuário
     """
     if not session_data or not session_data.get('logged_in'):
         return [], [], [], []
@@ -147,11 +131,6 @@ def handle_login_redirect(session_data):
     """
     Redireciona o usuário após login bem-sucedido.
     
-    Args:
-        session_data (dict): Dados da sessão do usuário
-        
-    Returns:
-        tuple: (pathname, session_data) - Nova rota e dados da sessão
     """
     if session_data and session_data.get('logged_in'):
         # Redireciona para dashboard após login
@@ -172,12 +151,6 @@ def handle_logout(pathname, session_data):
     """
     Processa o logout do usuário.
     
-    Args:
-        pathname (str): Caminho da URL atual
-        session_data (dict): Dados da sessão atual
-        
-    Returns:
-        tuple: (session_data, pathname) - Sessão limpa e redirecionamento
     """
     if pathname == '/logout':
         # Limpa a sessão e redireciona para login

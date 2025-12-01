@@ -16,16 +16,18 @@ from app import app
 
 # --- Estilos ---
 card_icon = {
-    "color": "white",
+    "color": "white",               
     "textAlign": "center",
     "fontSize": 30,
     "margin": "auto",
 }
 
+# Margem padrão para os gráficos
 graph_margin = dict(l=25, r=25, t=25, b=0)
 
 # --- Layout Principal ---
 layout = dbc.Col([
+    # Linha 1: Cards de Resumo (Saldo, Receita, Despesa)
     dbc.Row([
         # Saldo
         dbc.Col([
@@ -67,20 +69,25 @@ layout = dbc.Col([
                 )])
             ], width=4),
     ], style={"margin": "10px"}),
+    
+    # Linha 2: Filtros e Gráfico 1 (Fluxo de Caixa)
     dbc.Row([
         dbc.Col([
             dbc.Card([
                 html.Legend("Filtrar lançamentos", className="card-title"),
+                
                 html.Label("Categorias das receitas"),
                 dcc.Dropdown(
                     id="dropdown-receita", clearable=False, style={"width": "100%"},
                     persistence=True, persistence_type="session", multi=True
                 ),
+                
                 html.Label("Categorias das despesas", style={"margin-top": "10px"}),
                 dcc.Dropdown(
                     id="dropdown-despesa", clearable=False, style={"width": "100%"},
                     persistence=True, persistence_type="session", multi=True
                 ),
+                
                 html.Legend("Período de Análise", style={"margin-top": "10px"}),
                 dcc.DatePickerRange(
                     id='date-picker-config', month_format='Do MMM, YY',
@@ -91,11 +98,18 @@ layout = dbc.Col([
                 )
             ], style={"height": "100%", "padding": "20px"}), 
         ], width=4),
+        
+        # Gráfico 1: Fluxo de Caixa Acumulado
         dbc.Col(dbc.Card(dcc.Graph(id="graph1"), style={"height": "100%", "padding": "10px"}), width=8),
     ], style={"margin": "10px"}),
+    
+    # Linha 3: Gráfico 2 (Barras) e Gráficos 3 e 4 (Pizza)
     dbc.Row([
+        # Gráfico 2: Comparativo Receitas x Despesas (Barras)
         dbc.Col(dbc.Card(dcc.Graph(id="graph2"), style={"padding": "10px"}), width=6),
+        # Gráfico 3: Pizza de Receitas
         dbc.Col(dbc.Card(dcc.Graph(id="graph3"), style={"padding": "10px"}), width=3),
+        # Gráfico 4: Pizza de Despesas
         dbc.Col(dbc.Card(dcc.Graph(id="graph4"), style={"padding": "10px"}), width=3),
     ], style={"margin": "10px"})
 ])
@@ -104,51 +118,82 @@ layout = dbc.Col([
 
 # Callbacks dos Cards (Receita, Despesa, Saldo)
 @app.callback(
-    [Output("dropdown-receita", "options"), Output("dropdown-receita", "value"), Output("p-receita-dashboards", "children")],
+    [Output("dropdown-receita", "options"), 
+     Output("dropdown-receita", "value"), 
+     Output("p-receita-dashboards", "children")],
     Input("store-receitas", "data")
 )
 def update_receitas_cards(data):
     """
     Atualiza o dropdown de receitas e o card de total de receitas.
-    
+
     """
-    if not data: return [], [], "R$ 0.00"
+    if not data: 
+        return [], [], "R$ 0.00"
+        
     df = pd.DataFrame(data)
     valor = df['Valor'].sum()
     categorias = df['Categoria'].unique().tolist()
     options = [{"label": cat, "value": cat} for cat in categorias]
+    
+    # Retorna todas as categorias como valor padrão para o dropdown
     return options, categorias, f"R$ {valor:.2f}"
 
 @app.callback(
-    [Output("dropdown-despesa", "options"), Output("dropdown-despesa", "value"), Output("p-despesa-dashboards", "children")],
+    [Output("dropdown-despesa", "options"), 
+     Output("dropdown-despesa", "value"), 
+     Output("p-despesa-dashboards", "children")],
     Input("store-despesas", "data")
 )
 def update_despesas_cards(data):
-    if not data: return [], [], "R$ 0.00"
+    """
+    Atualiza o dropdown de despesas e o card de total de despesas.
+    
+    """
+    if not data: 
+        return [], [], "R$ 0.00"
+        
     df = pd.DataFrame(data)
     valor = df['Valor'].sum()
     categorias = df['Categoria'].unique().tolist()
     options = [{"label": cat, "value": cat} for cat in categorias]
+    
+    # Retorna todas as categorias como valor padrão para o dropdown
     return options, categorias, f"R$ {valor:.2f}"
 
 @app.callback(
     Output("p-saldo-dashboards", "children"),
-    [Input("store-receitas", "data"), Input("store-despesas", "data")]
+    [Input("store-receitas", "data"), 
+     Input("store-despesas", "data")]
 )
 def update_saldo_total(receitas_data, despesas_data):
+    """
+    Calcula e exibe o saldo total (Receitas - Despesas).
+
+    """
     total_receitas = pd.DataFrame(receitas_data)['Valor'].sum() if receitas_data else 0
     total_despesas = pd.DataFrame(despesas_data)['Valor'].sum() if despesas_data else 0
     saldo = total_receitas - total_despesas
+    
     return f"R$ {saldo:.2f}"
 
-# Gráfico 1 - Fluxo de Caixa
+# Gráfico 1 - Fluxo de Caixa Acumulado
 @app.callback(
     Output('graph1', 'figure'),
-    [Input('store-receitas', 'data'), Input('store-despesas', 'data'),
-     Input("dropdown-receita", "value"), Input("dropdown-despesa", "value")]
+    [Input('store-receitas', 'data'), 
+     Input('store-despesas', 'data'),
+     Input("dropdown-receita", "value"), 
+     Input("dropdown-despesa", "value"),
+     Input('date-picker-config', 'start_date'), 
+     Input('date-picker-config', 'end_date')]
 )
-def update_graph1(data_receita, data_despesa, receita_selecionada, despesa_selecionada):
-    # Garante que os seletores não sejam None para o filtro .isin()
+def update_graph1(data_receita, data_despesa, receita_selecionada, despesa_selecionada, start_date, end_date):
+    """
+    Gera o gráfico de linha do fluxo de caixa acumulado.
+    
+    Filtra os dados por categoria e por período de data.
+    """
+    # Garante que os seletores não sejam None para o filtro
     receita_selecionada = receita_selecionada or []
     despesa_selecionada = despesa_selecionada or []
 
@@ -156,15 +201,27 @@ def update_graph1(data_receita, data_despesa, receita_selecionada, despesa_selec
     df_receitas = pd.DataFrame(data_receita) if data_receita else pd.DataFrame({'Categoria': [], 'Data': [], 'Valor': []})
     df_despesas = pd.DataFrame(data_despesa) if data_despesa else pd.DataFrame({'Categoria': [], 'Data': [], 'Valor': []})
 
-    # Filtra pelos valores selecionados nos dropdowns
+    # 1. Filtra pelos valores selecionados nos dropdowns
     df_receitas = df_receitas[df_receitas['Categoria'].isin(receita_selecionada)]
     df_despesas = df_despesas[df_despesas['Categoria'].isin(despesa_selecionada)]
+    
+    # 2. Filtra por período de data
+    if start_date and end_date:
+        start_date = pd.to_datetime(start_date)
+        end_date = pd.to_datetime(end_date)
+        
+        # Converte a coluna 'Data' para datetime para comparação
+        df_receitas['Data'] = pd.to_datetime(df_receitas['Data'])
+        df_despesas['Data'] = pd.to_datetime(df_despesas['Data'])
+        
+        df_receitas = df_receitas[(df_receitas['Data'] >= start_date) & (df_receitas['Data'] <= end_date)]
+        df_despesas = df_despesas[(df_despesas['Data'] >= start_date) & (df_despesas['Data'] <= end_date)]
 
-    # Agrupa os dados
+    # 3. Agrupa os dados por data
     df_rc = df_receitas.set_index("Data")[["Valor"]].groupby("Data").sum().rename(columns={"Valor": "Receita"}) if not df_receitas.empty else pd.DataFrame()
     df_ds = df_despesas.set_index("Data")[["Valor"]].groupby("Data").sum().rename(columns={"Valor": "Despesa"}) if not df_despesas.empty else pd.DataFrame()
 
-    # Junta os dois dataframes
+    # 4. Junta os dois dataframes e calcula o acumulado
     df_acum = df_rc.join(df_ds, how="outer").fillna(0)
 
     # Garante que ambas as colunas 'Receita' e 'Despesa' existam após o join
@@ -175,19 +232,34 @@ def update_graph1(data_receita, data_despesa, receita_selecionada, despesa_selec
 
     df_acum["Acum"] = (df_acum["Receita"] - df_acum["Despesa"]).cumsum()
 
+    # 5. Cria a figura
     fig = go.Figure()
     fig.add_trace(go.Scatter(name="Fluxo de caixa", x=df_acum.index, y=df_acum["Acum"], mode="lines"))
-    fig.update_layout(margin=graph_margin, height=250, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    
+    # Estilização
+    fig.update_layout(
+        margin=graph_margin, 
+        height=250, 
+        paper_bgcolor='rgba(0,0,0,0)', 
+        plot_bgcolor='rgba(0,0,0,0)',
+        title="Fluxo de Caixa Acumulado"
+    )
     return fig
 
-# Gráfico 2 - Comparativo Receitas x Despesas
+# Gráfico 2 - Comparativo Receitas x Despesas (Barras)
 @app.callback(
     Output('graph2', 'figure'),
-    [Input('store-receitas', 'data'), Input('store-despesas', 'data'),
-     Input('dropdown-receita', 'value'), Input('dropdown-despesa', 'value'),
-     Input('date-picker-config', 'start_date'), Input('date-picker-config', 'end_date')]
+    [Input('store-receitas', 'data'), 
+     Input('store-despesas', 'data'),
+     Input('dropdown-receita', 'value'), 
+     Input('dropdown-despesa', 'value'),
+     Input('date-picker-config', 'start_date'), 
+     Input('date-picker-config', 'end_date')]
 )
 def update_graph2(data_receita, data_despesa, receita_selecionada, despesa_selecionada, start_date, end_date):
+    """
+    Gera o gráfico de barras comparativo de Receitas e Despesas por data.
+    """
     fig = go.Figure()
     
     if not data_receita and not data_despesa:
@@ -197,62 +269,141 @@ def update_graph2(data_receita, data_despesa, receita_selecionada, despesa_selec
     df_rc = pd.DataFrame(data_receita) if data_receita else pd.DataFrame()
     df_ds = pd.DataFrame(data_despesa) if data_despesa else pd.DataFrame()
 
+    # Adiciona a coluna 'Output' para diferenciar Receitas e Despesas
     if not df_rc.empty: df_rc["Output"] = "Receitas"
     if not df_ds.empty: df_ds["Output"] = "Despesas"
     
+    # Concatena os DataFrames
     df_final = pd.concat([df for df in [df_rc, df_ds] if not df.empty])
     
     if df_final.empty or not start_date or not end_date:
         fig.update_layout(title="Selecione filtros para exibir dados", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         return fig
 
+    # 1. Filtra por período de data
     df_final["Data"] = pd.to_datetime(df_final["Data"])
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
 
     df_final = df_final[(df_final["Data"] >= start_date) & (df_final["Data"] <= end_date)]
     
+    # 2. Filtra por categoria
     categorias_selecionadas = (receita_selecionada or []) + (despesa_selecionada or [])
     df_final = df_final[df_final["Categoria"].isin(categorias_selecionadas)]
 
-    fig = px.bar(df_final, x="Data", y="Valor", color="Output", barmode="group")
-    fig.update_layout(margin=graph_margin, height=350, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    # 3. Cria o gráfico de barras
+    fig = px.bar(
+        df_final, 
+        x="Data", 
+        y="Valor", 
+        color="Output", 
+        barmode="group",
+        title="Comparativo Receitas x Despesas"
+    )
+    
+    # Estilização
+    fig.update_layout(
+        margin=graph_margin, 
+        height=350, 
+        paper_bgcolor='rgba(0,0,0,0)', 
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
     return fig
 
-# Gráfico 3 - Pizza de Receitas
+# Gráfico 3 - Pizza de Receitas (Corrigido para filtrar por data)
 @app.callback(
     Output('graph3', "figure"),
-    [Input('store-receitas', 'data'), Input('dropdown-receita', 'value')]
+    [Input('store-receitas', 'data'),
+     Input('dropdown-receita', 'value'),
+     Input('date-picker-config', 'start_date'),
+     Input('date-picker-config', 'end_date')]
 )
-def update_pie_receita(data_receita, receita_selecionada):
+def update_pie_receita(data_receita, receita_selecionada, start_date, end_date):
+    """
+    Gera o gráfico de pizza de Receitas, filtrando por categoria e data.
+    
+    """
     if not data_receita or not receita_selecionada:
         return go.Figure(layout={'title': 'Receitas', 'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'})
 
     df = pd.DataFrame(data_receita)
+    
+    # 1. Filtra por categoria
     df = df[df['Categoria'].isin(receita_selecionada)]
+
+    # 2. Filtra por período de data (Correção de Bug)
+    if start_date and end_date:
+        df['Data'] = pd.to_datetime(df['Data'])
+        start_date = pd.to_datetime(start_date)
+        end_date = pd.to_datetime(end_date)
+        df = df[(df['Data'] >= start_date) & (df['Data'] <= end_date)]
 
     if df.empty:
         return go.Figure(layout={'title': 'Receitas', 'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'})
 
-    fig = px.pie(df, values='Valor', names='Categoria', hole=.2, title="Receitas")
-    fig.update_layout(margin=graph_margin, height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    # 3. Cria o gráfico de pizza
+    fig = px.pie(
+        df, 
+        values='Valor', 
+        names='Categoria', 
+        hole=.2, 
+        title="Receitas por Categoria"
+    )
+    
+    # Estilização
+    fig.update_layout(
+        margin=graph_margin, 
+        height=300, 
+        paper_bgcolor='rgba(0,0,0,0)', 
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
     return fig
 
-# Gráfico 4 - Pizza de Despesas
+# Gráfico 4 - Pizza de Despesas (Corrigido para filtrar por data)
 @app.callback(
     Output('graph4', "figure"),
-    [Input('store-despesas', 'data'), Input('dropdown-despesa', 'value')]
+    [Input('store-despesas', 'data'),
+     Input('dropdown-despesa', 'value'),
+     Input('date-picker-config', 'start_date'),
+     Input('date-picker-config', 'end_date')]
 )
-def update_pie_despesa(data_despesa, despesa_selecionada):
+def update_pie_despesa(data_despesa, despesa_selecionada, start_date, end_date):
+    """
+    Gera o gráfico de pizza de Despesas, filtrando por categoria e data.
+    
+    """
     if not data_despesa or not despesa_selecionada:
         return go.Figure(layout={'title': 'Despesas', 'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'})
 
     df = pd.DataFrame(data_despesa)
+    
+    # 1. Filtra por categoria
     df = df[df['Categoria'].isin(despesa_selecionada)]
+
+    # 2. Filtra por período de data (Correção de Bug)
+    if start_date and end_date:
+        df['Data'] = pd.to_datetime(df['Data'])
+        start_date = pd.to_datetime(start_date)
+        end_date = pd.to_datetime(end_date)
+        df = df[(df['Data'] >= start_date) & (df['Data'] <= end_date)]
 
     if df.empty:
         return go.Figure(layout={'title': 'Despesas', 'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'})
 
-    fig = px.pie(df, values='Valor', names='Categoria', hole=.2, title="Despesas")
-    fig.update_layout(margin=graph_margin, height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    # 3. Cria o gráfico de pizza
+    fig = px.pie(
+        df, 
+        values='Valor', 
+        names='Categoria', 
+        hole=.2, 
+        title="Despesas por Categoria"
+    )
+    
+    # Estilização
+    fig.update_layout(
+        margin=graph_margin, 
+        height=300, 
+        paper_bgcolor='rgba(0,0,0,0)', 
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
     return fig

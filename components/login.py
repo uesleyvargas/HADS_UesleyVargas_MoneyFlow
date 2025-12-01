@@ -274,19 +274,20 @@ def process_register(n_clicks, username, email, password, confirm_password):
             dismissable=True
         )
     
-#Callback para permitir login com Enter
 @app.callback(
     Output("login-button", "n_clicks"),
-    [Input("login-usename", "n_submit"),
+    [Input("login-username", "n_submit"),
      Input("login-password", "n_submit")],
-     [State("login-button", "n_clicks")],
-     prevent_initial_call=True
+    [State("login-button", "n_clicks"),
+     State("login-username", "value"),
+     State("login-password", "value")],
+    prevent_initial_call=True
 )
-def submit_on_enter(username_submit, password_submit, current_clicks):
+def submit_on_enter(username_submit, password_submit, current_clicks, username, password):
     """
     Permite fazer login pressionando Enter nos campos de entrada.
-    
+    Só permite se ambos os campos estiverem preenchidos.
     """
-    if username_submit or password_submit:
+    if (username_submit or password_submit) and username and password:
         return (current_clicks or 0) + 1
     return current_clicks or 0

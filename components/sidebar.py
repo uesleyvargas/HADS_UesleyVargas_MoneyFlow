@@ -1,11 +1,12 @@
 """
-Componente da barra lateral do aplicativo .
+Componente da barra lateral do aplicativo.
 Responsável pela navegação, formulários de transações e upload de foto de perfil.
 """
 
 import dash
 from dash import html, dcc
 from dash.dependencies import Input, Output, State
+import random
 import dash_bootstrap_components as dbc
 from app import app
 from datetime import datetime, date
@@ -25,9 +26,24 @@ from db import (
 )
 
 # ========= CONFIGURAÇÕES ========= #
-UPLOAD_FOLDER = 'assets/profile_pics'
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+
+# Frases motivacionais 
+FRASES_MOTIVACIONAIS = [
+    "💰 Seu futuro financeiro começa hoje!",
+    "📈 Cada centavo conta para seus objetivos",
+    "🎯 Controle suas finanças, conquiste sua liberdade",
+    "💪 Organização financeira é autocuidado",
+    "🚀 Rumo à independência financeira!",
+    "🌟 Pequenas economias, grandes conquistas",
+    "📊 Domine seu dinheiro, transforme sua vida",
+    "🔥 Seu progresso financeiro inspira!",
+    "🌈 Planeje hoje, colha amanhã",
+    "💎 Sua jornada financeira única"
+]
+
+def get_frase_motivacional():
+    """Retorna uma frase motivacional aleatória."""
+    return random.choice(FRASES_MOTIVACIONAIS)
 
 # ========= FUNÇÕES AUXILIARES ========= #
 def create_receita_modal_body():
@@ -218,48 +234,53 @@ layout = dbc.Col([
     html.P("By Uesley", className="text-info"),
     html.Hr(),
     
-    # Seção de Perfil com Upload de Foto
+    # Seção com Mensagem Motivacional
     html.Div([
-        # Store para manter o estado do avatar
-        dcc.Store(id='store-avatar', data={'src': '/assets/img_hom.png'}),
+        # Store para manter o estado da frase
+        dcc.Store(id='store-frase-motivacional', data={'frase': get_frase_motivacional()}),
         
-        # Container do Avatar com dcc.Upload customizado
+        # Mensagem Motivacional
         html.Div([
-            html.Div([
-                # Imagem do Avatar
-                html.Img(
-                    src='/assets/img_hom.png', 
-                    id='avatar_image',
-                    alt='Avatar', 
-                    className='perfil_avatar'
-                ),
-                # Overlay com Ícone de Câmera
-                html.Div([
-                    html.I(className="fa fa-camera")
-                ], className='avatar-overlay'),
-                
-                # dcc.Upload customizado
-                dcc.Upload(
-                    id='upload_avatar',
-                    children=html.Div(),
-                    style={
-                        'position': 'absolute',
-                        'width': '100%',
-                        'height': '100%',
-                        'top': '0',
-                        'left': '0',
-                        'opacity': '0',
-                        'cursor': 'pointer',
-                        'zIndex': '10'
-                    },
-                    multiple=False
-                )
-            ], className='avatar-wrapper', style={'position': 'relative'})
-        ], style={'textAlign': 'center'}),
-        
-        # Texto de Ajuda
-        html.P("Clique para alterar foto", className="avatar-click-text")
-    ], className='avatar-container'),
+            html.P(
+                id="frase-motivacional",
+                children=get_frase_motivacional(),
+                style={
+                    'font-size': '14px',
+                    'font-weight': '500',
+                    'color': '#2c3e50',
+                    'text-align': 'center',
+                    'margin': '10px 0',
+                    'padding': '10px 15px',
+                    'background': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    'color': 'white',
+                    'border-radius': '8px',
+                    'box-shadow': '0 2px 4px rgba(0,0,0,0.1)',
+                    'min-height': '50px',
+                    'display': 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'center'
+                }
+            ),
+            # Botão para nova frase
+            dbc.Button(
+                "🔄 Nova Inspiração",
+                id="btn-nova-frase",
+                color="outline-primary",
+                size="sm",
+                style={
+                    'width': '100%',
+                    'margin-top': '5px',
+                    'font-size': '12px'
+                }
+            )
+        ], style={'margin-bottom': '15px'})
+    ], style={
+        'textAlign': 'center',
+        'padding': '15px',
+        'background': '#f8f9fa',
+        'border-radius': '10px',
+        'margin-bottom': '20px'
+    }),
     
     # Botões de Ação Rápida
     dbc.Row([
@@ -348,7 +369,7 @@ def toggle_despesa_modal(open_clicks, save_clicks, is_open):
         return not is_open
     return is_open
 
-# CALLBACK : Salvar Transações
+# CALLBACK: Salvar Transações
 @app.callback(
     Output('store-receitas', 'data'),
     Input('salvar_receita', 'n_clicks'),
@@ -479,3 +500,15 @@ def manage_categories(tipo, add_clicks, remove_clicks, nova_categoria, categoria
     options = [{'label': cat, 'value': cat} for cat in categorias]
     
     return options, options
+
+# CALLBACK: Nova frase motivacional
+@app.callback(
+    Output('frase-motivacional', 'children'),
+    Input('btn-nova-frase', 'n_clicks'),
+    prevent_initial_call=True
+)
+def update_frase_motivacional(n_clicks):
+    """Atualiza a frase motivacional quando o botão é clicado."""
+    if n_clicks:
+        return get_frase_motivacional()
+    return dash.no_update
