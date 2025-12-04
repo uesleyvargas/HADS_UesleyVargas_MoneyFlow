@@ -1,6 +1,5 @@
 """
-Módulo responsável pela configuração e gerenciamento do banco de dados SQLite
-para o aplicativo MyFinance.
+Módulo responsável pela configuração e gerenciamento do banco de dados SQLite.
 """
 
 import sqlite3

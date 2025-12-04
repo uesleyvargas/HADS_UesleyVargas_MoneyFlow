@@ -1,5 +1,5 @@
 """
-Arquivo principal do aplicativo MyFinance. Responsável pelo roteamento,
+Arquivo principal do aplicativo. Responsável pelo roteamento,
 layout principal e gerenciamento de sessões de usuário.
 """
 from db import inicializar_app

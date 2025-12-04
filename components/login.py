@@ -1,6 +1,6 @@
 """
 Componente responsável pela interface de login e registro de usuários
-do aplicativo MyFinance. Inclui layouts e callbacks para autenticação.
+do aplicativo.
 """
 from dash import html, dcc, callback_context
 from dash.dependencies import Input, Output, State

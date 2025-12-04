@@ -1,6 +1,6 @@
 """
 Componente da barra lateral do aplicativo.
-Responsável pela navegação, formulários de transações e upload de foto de perfil.
+Responsável pela navegação, formulários de transações.
 """
 
 import dash

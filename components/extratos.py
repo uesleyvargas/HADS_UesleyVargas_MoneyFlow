@@ -1,6 +1,6 @@
 """
 Componente responsável pela exibição de extratos e relatórios detalhados
-das transações financeiras do aplicativo MyFinance.
+das transações financeiras do aplicativo.
 """
 
 import dash

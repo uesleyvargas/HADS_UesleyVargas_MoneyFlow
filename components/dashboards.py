@@ -1,5 +1,5 @@
 """
-Componente responsável pelos dashboards e gráficos do aplicativo MyFinance.
+Componente responsável pelos dashboards e gráficos do aplicativo.
 Exibe cards com resumos financeiros e gráficos interativos para análise de dados.
 """
 
