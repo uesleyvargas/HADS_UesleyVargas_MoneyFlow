@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
+from sqlalchemy.engine import make_url
+from sqlalchemy.exc import ArgumentError
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -95,9 +97,23 @@ def load_settings() -> Settings:
         # reinício, mas nunca rodamos com um segredo previsível e público.
         secret_key = secrets.token_hex(32)
 
-    database_url = _normalize_database_url(
-        os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR / 'moneyflow.db'}")
-    )
+    raw_database_url = os.getenv("DATABASE_URL")
+    if raw_database_url is None:
+        raw_database_url = f"sqlite:///{BASE_DIR / 'moneyflow.db'}"
+    database_url = _normalize_database_url(raw_database_url.strip())
+    try:
+        make_url(database_url)
+    except ArgumentError:
+        # Mostra só o início (esquema): a senha nunca vai para o log. Casos
+        # comuns: variável vazia ou referência do provedor não resolvida,
+        # como o texto literal "${{ Postgres.DATABASE_URL }}".
+        raise RuntimeError(
+            "DATABASE_URL inválida: não é uma URL de banco de dados. "
+            f"Valor recebido começa com {database_url[:14]!r} "
+            f"({len(database_url)} caracteres). "
+            "Esperado algo como postgresql://usuario:senha@host:5432/banco. "
+            "Se usa referência do Railway, confira o nome do serviço e da variável."
+        ) from None
 
     return Settings(
         secret_key=secret_key,
