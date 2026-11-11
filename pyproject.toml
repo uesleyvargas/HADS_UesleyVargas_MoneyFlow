@@ -1,0 +1,32 @@
+[project]
+name = "moneyflow"
+version = "2.0.0"
+description = "Aplicação web de gestão financeira pessoal"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # bugbear
+    "UP",  # pyupgrade
+    "S",   # bandit (segurança)
+]
+ignore = [
+    "E501",  # comprimento de linha — o formatter já cuida
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Testes usam `assert` por natureza, e as "senhas" ali são fixtures que nunca
+# saem da suíte — o bandit reclamaria de todas elas.
+"tests/*" = ["S101", "S105", "S106", "S107"]

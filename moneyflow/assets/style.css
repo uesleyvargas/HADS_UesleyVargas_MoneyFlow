@@ -1,0 +1,103 @@
+/* ==========================================================================
+   MoneyFlow — estilos da aplicação
+
+   Escopo deliberadamente pequeno: o Bootstrap (tema COSMO) cuida do grosso.
+   Aqui ficam só os ajustes que ele não cobre.
+
+   Nada de overrides globais com `!important` em `.row` ou `.card` — eles
+   quebram o grid responsivo do próprio Bootstrap em telas pequenas.
+   ========================================================================== */
+
+:root {
+    --mf-surface: #fcfcfb;
+    --mf-page: #f9f9f7;
+    --mf-border: #e1e0d9;
+    --mf-text-muted: #898781;
+}
+
+body {
+    background-color: var(--mf-page);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* ========= Sidebar ========= */
+
+#sidebar {
+    background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+/* Em telas médias para cima a sidebar acompanha a rolagem; no celular ela
+   fica no fluxo normal, empilhada acima do conteúdo. */
+@media (min-width: 768px) {
+    #sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+    }
+}
+
+#sidebar .nav-link {
+    border-radius: 8px;
+    color: #495057;
+    margin-bottom: 4px;
+    transition: background-color 0.15s ease;
+}
+
+#sidebar .nav-link:hover {
+    background-color: rgba(13, 110, 253, 0.08);
+}
+
+/* ========= Cards ========= */
+
+.card {
+    border-radius: 12px;
+}
+
+/* ========= Tabela de extratos ========= */
+
+/* Alvos de toque confortáveis: a linha inteira responde ao ponteiro, não
+   apenas o texto. */
+.dash-table-container .dash-cell {
+    min-height: 40px;
+}
+
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner tr:hover {
+    background-color: rgba(13, 110, 253, 0.04);
+}
+
+/* O ✕ de excluir é pequeno demais por padrão para uso em celular. */
+.dash-table-container .dash-delete-cell {
+    font-size: 18px !important;
+    color: #e34948 !important;
+    padding: 0 8px !important;
+}
+
+/* Em telas estreitas a tabela rola na horizontal dentro do próprio card,
+   em vez de fazer a página inteira rolar de lado. */
+.dash-table-container {
+    overflow-x: auto;
+}
+
+/* ========= Gráficos ========= */
+
+.js-plotly-plot .plotly .modebar {
+    display: none;
+}
+
+/* ========= Acessibilidade ========= */
+
+/* Foco sempre visível para quem navega por teclado. */
+:focus-visible {
+    outline: 2px solid #2a78d6;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}

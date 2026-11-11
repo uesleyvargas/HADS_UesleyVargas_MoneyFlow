@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Testes
+        run: pytest --cov=moneyflow --cov-report=term-missing
+        env:
+          SECRET_KEY: chave-de-teste-do-ci
+          DEBUG: "1"
+
+      - name: Verificar que as migrations refletem os modelos
+        # Se alguém alterar um modelo e esquecer de gerar a migration, o
+        # autogenerate detecta diferença e o build falha aqui, e não no deploy.
+        run: |
+          alembic upgrade head
+          alembic check
+        env:
+          SECRET_KEY: chave-de-teste-do-ci
+          DEBUG: "1"

@@ -1,0 +1,43 @@
+# Sobe a aplicação junto com um PostgreSQL local.
+#
+# Serve para exercitar, na sua máquina, exatamente a mesma configuração que
+# roda na nuvem — encontrando as diferenças entre SQLite e PostgreSQL antes
+# do deploy, e não depois.
+#
+#   docker compose up --build
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: moneyflow
+      POSTGRES_PASSWORD: senha_local_dev
+      POSTGRES_DB: moneyflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moneyflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    ports:
+      - "8050:8050"
+    environment:
+      DATABASE_URL: postgresql://moneyflow:senha_local_dev@db:5432/moneyflow
+      # Chave fixa apenas para o ambiente local. Em produção use um segredo
+      # gerado por ambiente e guardado no painel do provedor.
+      SECRET_KEY: chave-apenas-para-desenvolvimento-local
+      DEBUG: "0"
+      # Sem HTTPS no localhost, então o cookie não pode exigir conexão segura.
+      SESSION_COOKIE_SECURE: "0"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

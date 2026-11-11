@@ -1,0 +1,46 @@
+# Segredos — NUNCA commitar
+.env
+*.pem
+*.key
+
+# Bancos de dados locais.
+# Contêm hashes de senha e dados financeiros: uma vez no histórico do git,
+# ficam públicos para sempre se o repositório for aberto.
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.backup-*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Ambientes virtuais
+venv/
+.venv/
+env/
+ENV/
+
+# Ferramentas
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+
+# Editores
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
